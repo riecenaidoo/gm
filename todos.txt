@@ -1,0 +1,3 @@
+bring in docker and deployment scripts
+bring in old notes on the project
+check on both machines whether I have anything project related that is not contained here
