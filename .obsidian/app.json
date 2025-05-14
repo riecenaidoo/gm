@@ -1,0 +1,12 @@
+{
+  "userIgnoreFilters": [
+    "/[aA][tT][tT][aA][cC][hH][mM][eE][nN][tT][sS]/",
+    "/[tT][aA][rR][gG][eE][tT]/",
+    "/[sS][rR][cC]/",
+    "/[pP][oO][sS][tT][mM][aA][nN]/",
+    "/[dD][iI][sS][tT]/",
+    "/[nN][oO][dD][eE]_[mM][oO][dD][uU][lL][eE][sS]/"
+  ],
+  "showInlineTitle": true,
+  "newFileLocation": "current"
+}
