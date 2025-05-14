@@ -1,0 +1,3 @@
+git@github.com:riecenaidoo/gm-discord-npc-chat.git
+git@github.com:riecenaidoo/gm-discord-webhook-dice-roller.git
+git@github.com:riecenaidoo/gm-youtube-url-validator.git

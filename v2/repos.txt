@@ -1,0 +1,3 @@
+git@github.com:riecenaidoo/gm-audio-service.git
+git@github.com:riecenaidoo/gm-catalogue-builder.git
+git@github.com:riecenaidoo/gm-song-storage.git

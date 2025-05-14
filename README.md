@@ -1,41 +1,33 @@
-# README
+A collection of tools to assist a **Gamemaster** in running a **TTRPG**, especially one hosted virtually over **Discord**. 
 
-Basic, top level project information.
+This repository is the root of the **Gamemaster** project and serves to organise all the related `gm` project repositories. It contains initialisation and deployment scripts, as well as general project information.
+## Structure
 
-This repository is a skeleton structure for organising the different units that compose this project.
-Each unit is maintained (or archived) in its own repository.
-This repository contains scripts for retrieving all these units and organising them neatly and consistently across different workstations.
-This repository contains documentation and reading material for this project.
+- The primary branch name is `project` to make it easily identifiable I am no longer within a `gm` repository while working with Git off the command line.
+- `repos.txt` files are used to classify the `gm` repositories - either for versioning, or to group them logically. The following (bash) command can be used to initialise (pull down) all `gm` repositories (leverages the `repos.txt` file).
 
-## Project Structure
+```
+ls -d v*/** | xargs -n 1 ./init.sh
+```
 
-`ls -d v*/* | xargs -n 1 ./init.sh` - Linux, Clone down all projects
+## Versioning
 
-### File System
+### V1 - P.O.C (DONE)
 
-Top level directories separate versions of the project.
-Each version contains source code, and deployment scripts specific to that version of the project.
+A proof of concept to see whether the tools I wanted to create could be useful, and whether they could integrate with Discord.
+- **They are useful and can integrate with Discord.**
 
-### Repositories
+**Soundboard** (*this is the primary tool I want to create, the one that solves my biggest pain point*)
+This proof of concept should have been archived earlier. The mistake was continuing to add features and experiment on-top of a design that was not meant to be long term. V1 worked well for what it was meant to do: prove the concept works, be usable and offer a short term solution while a fully fledged solution was being built.
 
-Each component of the system has its own repository. 
-There are initialisation scripts setup to pull these repositories to the local machine, after this repository has been pulled.
-There are `.gitignore` files to keep these repositories outside of this one.
+### V2 - Application (IN PROGRESS)
 
-## Project Versioning
-
-### V1 - P.O.C [DONE]
-
-A proof of concept that should have been archived earlier. The mistake was continuing to add features and experiment ontop of a design that was not meant to be long term. V1 worked well for what it was meant to do: prove the concept works, be usable and offer a short term solution while a fully fledged solution was being built.
-
-### V2 - Application [IN PROGRESS]
-
-System that could be deployed locally as a live service, for personal use.
+A system that could be deployed locally as a live service, for personal use.
 
 #### Changelog
 
-- Decouple storage from interface; storage is now a standalone component of the system.
+- Decoupled the storage from interface; storage is now a standalone component of the system.
 
-### V3 - Authentication [TODO]
+### V3 - Authentication (TODO)
 
-System that could be deployed online as a live service, with access restricted to a small group of friends.
+A system that could be deployed online as a live service, with access restricted to a small group of friends.

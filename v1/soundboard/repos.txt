@@ -1,0 +1,2 @@
+git@github.com:riecenaidoo/gm-discord-music-bot.git
+git@github.com:riecenaidoo/gm-soundboard-gui.git

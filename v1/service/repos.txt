@@ -1,4 +1,0 @@
-git@github.com:riecenaidoo/gm-discord-music-bot.git
-git@github.com:riecenaidoo/gm-discord-webhook-dice-roller.git
-git@github.com:riecenaidoo/gm-youtube-url-validator.git
-git@github.com:riecenaidoo/gm-discord-npc-chat.git

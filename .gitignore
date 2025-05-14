@@ -1,2 +1,2 @@
-v*/*/*
-!v*/*/repos.txt
+# Ignore project repositories
+**/gm-*/
