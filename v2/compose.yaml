@@ -1,0 +1,53 @@
+name: gamemaster-soundboard-v2
+services:
+  # [gm-soundboard-ui]    
+  soundboard-ui:
+    container_name: "gm-v2-soundboard-ui"
+    image: gm-v2-soundboard-ui:latest
+    build:
+      context: "./gm-catalogue-builder"
+      dockerfile: "./Dockerfile"
+    ports:
+      - "4200:80"
+    depends_on:
+      - storage-api
+      - audio-api
+  # [gm-song-storage]   
+  storage-api:
+    container_name: "gm-v2-song-storage-api"
+    image: gm-v2-song-storage-api:latest
+    build:
+      context: "./gm-song-storage"
+      dockerfile: "./Dockerfile"
+    ports:
+      # TODO rm. This is only needed because the ng application is expecting localhost as the hostname.
+      - "8080:8080"
+    environment:
+      # Default User & Password already specified in .properties
+      # [How we resolve hostname 'db'](https://docs.docker.com/compose/networking/)
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://storage-db:5432/gm_song_storage
+      - SPRING.JPA.OPEN-IN-VIEW=false
+    depends_on:
+      - storage-db
+  storage-db:
+    container_name: "gm-v2-song-storage-db"
+    image: postgres:14.12-bullseye
+    environment:
+      # [Environment Variables for Postgres Img](https://hub.docker.com/_/postgres)
+      - POSTGRES_PASSWORD=admin
+    volumes:
+      # This is where the DDL would go, for now it just is a placeholder.
+      - "./gm-song-storage/core/src/main/sql/:/docker-entrypoint-initdb.d/"
+  # [gm-audio-service]    
+  audio-api:
+    container_name: "gm-v2-audio-service-api"
+    image: gm-v2-audio-service-api:latest
+    build:
+      context: "./gm-audio-service"
+      dockerfile: "./Dockerfile"
+    ports:
+      # TODO rm. This is only needed because the ng application is expecting localhost as the hostname.
+      - "5050:5050"
+    tty: true
+    env_file:
+      - "./gm-audio-service/.env"
