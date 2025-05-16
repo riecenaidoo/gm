@@ -1,7 +1,10 @@
 #!/bin/bash
 
-echo Initialise dir. Cloning repos...
-
-ls -d v*/* | xargs -n 1 ./clone_repos.sh
-# If I knew how to do the things, I'd have this as one script.
-# I probably don't need xargs, but, fun!
+for dir in v1 v1/soundboard v2 
+do
+	for repo in $(cat $dir/repos.txt) 
+	do 
+		# -C to set the working dir for a Git cmd
+		git -C $dir clone $repo
+	done
+done
