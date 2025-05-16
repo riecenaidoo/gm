@@ -4,7 +4,7 @@ This repository is the root of the **Gamemaster** project and serves to organise
 ## Structure
 
 - The primary branch name is `project` to make it easily identifiable I am no longer within a `gm` repository while working with Git off the command line.
-- `repos.txt` files are used to classify the `gm` repositories - either for versioning, or to group them logically. The `init` scripts can be used to initialise (pull down) all `gm` repositories (leverages the `repos.txt` file).
+- `repos.txt` files are used to classify the `gm` repositories - either for versioning, or to group them logically. The `init` scripts can be used to initialise (pull down) all `gm` repositories (leverages the `repos.txt` file). Please ensure you have Docker Desktop running.
 
 ## Versioning
 
