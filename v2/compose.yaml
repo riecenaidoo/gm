@@ -32,12 +32,16 @@ services:
   storage-db:
     container_name: "gm-v2-song-storage-db"
     image: postgres:14.12-bullseye
+    # [Source](https://www.docker.com/blog/how-to-use-the-postgres-docker-official-image/)
+    restart: always
     environment:
       # [Environment Variables for Postgres Img](https://hub.docker.com/_/postgres)
       - POSTGRES_PASSWORD=admin
     volumes:
       # This is where the DDL would go, for now it just is a placeholder.
       - "./gm-song-storage/core/src/main/sql/:/docker-entrypoint-initdb.d/"
+      # Persist data between sessions.
+      - pgdata:/var/lib/postgresql/data
   # [gm-audio-service]    
   audio-api:
     container_name: "gm-v2-audio-service-api"
@@ -51,3 +55,5 @@ services:
     tty: true
     env_file:
       - "./gm-audio-service/.env"
+volumes:
+  pgdata:
