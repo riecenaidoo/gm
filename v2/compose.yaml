@@ -11,7 +11,6 @@ services:
       - "4200:80"
     depends_on:
       - storage-api
-      - audio-api
   # [gm-song-storage]   
   storage-api:
     container_name: "gm-v2-song-storage-api"
