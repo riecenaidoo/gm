@@ -1,2 +1,9 @@
-# Ignore project repositories
+# Exclude all project repositories
 **/gm-*/
+
+# Exclude all notes, unless explictly included
+*.md
+
+# Configs
+.idea/
+.obsidian
