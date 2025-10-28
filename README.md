@@ -1,28 +1,19 @@
-A collection of tools to assist a **Gamemaster** in running a **TTRPG**, especially one hosted virtually over **Discord**. 
+The root repository of the Gamemaster project.
 
-This repository is the root of the **Gamemaster** project and serves to organise all the related `gm` project repositories. It contains initialisation and deployment scripts, as well as general project information.
-## Structure
+Contains scripts to build and run the project locally. It acts as an aggregate
+for all Gamemaster repositories, and will clone and initialise them.
 
-- The primary branch name is `project` to make it easily identifiable I am no longer within a `gm` repository while working with Git off the command line.
+## Gamemaster Project
 
-## Versioning
+A collection of tools to assist a Gamemaster in:
 
-### V1 - P.O.C (DONE)
+- Managing the catalogue of audio, such as ambient noises and background music,
+  that can be streamed into Discord.
+- Managing the collection of NPCs that can "chat" with the party in Discord.
 
-A proof of concept to see whether the tools I wanted to create could be useful, and whether they could integrate with Discord.
-- **They are useful and can integrate with Discord.**
+## Composite Repositories
 
-**Soundboard** (*this is the primary tool I want to create, the one that solves my biggest pain point*)
-This proof of concept should have been archived earlier. The mistake was continuing to add features and experiment on-top of a design that was not meant to be long term. V1 worked well for what it was meant to do: prove the concept works, be usable and offer a short term solution while a fully fledged solution was being built.
+- [gm-ui](https://github.com/riecenaidoo/gm-ui): SPA interface
+- [gm-discord](https://github.com/riecenaidoo/gm-discord): Discord integrations
+- [gm-storage](https://github.com/riecenaidoo/gm-storage): Persistent storage
 
-### V2 - Application (IN PROGRESS)
-
-A system that could be deployed locally as a live service, for personal use.
-
-#### Changelog
-
-- Decoupled the storage from interface; storage is now a standalone component of the system.
-
-### V3 - Authentication (TODO)
-
-A system that could be deployed online as a live service, with access restricted to a small group of friends.
