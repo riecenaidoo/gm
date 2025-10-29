@@ -1,69 +1,106 @@
-.PHONY: launch dev repositories repositories-archive \
-psql	# Aliases
+# configs/makefiles/v1.1.1
+# See [7.2.1 General Conventions for Makefiles](https://www.gnu.org/prep/standards/html_node/Makefile-Basics.html)
+SHELL := /bin/sh
 
-launch: repositories gm-audio-service/.env	## launch the project via Docker. Will clone the required repositories and build the images for the containers.
-	docker compose up -d
+init: project repos	## default (no-arg) target to initialise the Project
 
-dev: repositories repositories-archive	## clone all repositories associated with the project for use as reference while developing.
+# See [7.2.6 Standard Targets for Users > 'all'](https://www.gnu.org/prep/standards/html_node/Standard-Targets.html)
+all: init archives	## primary target for creating all Project artifacts
 
-gm-audio-service/.env: gm-audio-service
-	@printf "\033[0;36mA template .env file was added to build the Audio Service image. A real token is required to run the Audio Service.\033[0m\n"
-	echo "# Add a Discord Bot token, or create one at https://discord.com/developers/applications" >> "gm-audio-service/.env" ; \
-	echo "DISCORD_BOT_TOKEN=<your_token_here>" >> "gm-audio-service/.env" ; \
-
+.PHONY: init all
 # ========================================
-# Repositories
+# Project Initialisation
 # ========================================
+MADE := ./.made
 
-repositories: \
-gm-audio-service \
-gm-song-storage \
-gm-ui
+project: $(MADE)	## alias for initialising the Project
 
-repositories-archive: \
-archive/gm-discord-music-bot \
-archive/gm-discord-npc-chat \
-archive/gm-discord-webhook-dice-roller \
-archive/gm-soundboard-gui \
-archive/gm-youtube-url-validator \
+$(MADE):
+	mkdir $(MADE)
 
-# Git will fail if the folder already exists and is not empty, so only clone if the folder does not exist.
-define git-clone-safe
-	@if [ ! -d "$(1)" ]; then \
-		git clone $(2); \
-	fi
-endef
+rm-project:	##> remove all Project initialisation artifacts
+	rm -rf $(MADE)
 
-gm-audio-service:
-	$(call git-clone-safe, gm-audio-service,git@github.com:riecenaidoo/gm-audio-service.git)
-	@printf "\033[1;33mThe Audio Service requires a Discord Bot token to function. See .env file.\033[0m\n"
-	@printf "\033[1;33mThe GM system can run without the Audio Service, but functionality will be limited.\033[0m\n"
-
-gm-song-storage:
-	$(call git-clone-safe, gm-song-storage,git@github.com:riecenaidoo/gm-song-storage.git)
-
-gm-ui:
-	$(call git-clone-safe, gm-ui,git@github.com:riecenaidoo/gm-ui.git)
-
-archive/gm-discord-music-bot:
-	$(call git-clone-safe, archive/gm-discord-music-bot,git@github.com:riecenaidoo/gm-discord-music-bot.git)
-
-archive/gm-discord-npc-chat:
-	$(call git-clone-safe, archive/gm-discord-npc-chat,git@github.com:riecenaidoo/gm-discord-npc-chat.git)
-
-archive/gm-discord-webhook-dice-roller:
-	$(call git-clone-safe, archive/gm-discord-webhook-dice-roller,git@github.com:riecenaidoo/gm-discord-webhook-dice-roller.git)
-
-archive/gm-soundboard-gui:
-	$(call git-clone-safe, archive/gm-soundboard-gui,git@github.com:riecenaidoo/gm-soundboard-gui.git)
-
-archive/gm-youtube-url-validator:
-	$(call git-clone-safe, archive/gm-youtube-url-validator,git@github.com:riecenaidoo/gm-youtube-url-validator.git)
-
+.PHONY: project rm-project
 # ========================================
-# Aliases
+# Composite Repositories
 # ========================================
+REPOSITORIES := gm-ui gm-discord gm-storage
 
-# Sync with the configuration in the `compose.yaml`
-psql:	## connect to the DB container
-	docker compose exec storage-db psql -h localhost -p 5432 -U postgres -d gm_song_storage
+repos: $(REPOSITORIES)	## alias for cloning all Project repositories
+
+gm-%:
+	git clone git@github.com:riecenaidoo/gm-$*.git
+	$(MAKE) -C ./gm-$* init
+
+rm-repos:	##> alias for removing all Project repositories
+	rm -rf $(REPOSITORIES)
+
+ARCHIVE := ./archive
+
+$(ARCHIVE):
+	mkdir $(ARCHIVE)
+
+ARCHIVED_REPOSITORIES := \
+	$(ARCHIVE)/gm-discord-music-bot  \
+	$(ARCHIVE)/gm-discord-npc-chat \
+	$(ARCHIVE)/gm-discord-webhook-dice-roller \
+	$(ARCHIVE)/gm-soundboard-gui \
+	$(ARCHIVE)/gm-youtube-url-validator
+
+archives: $(ARCHIVE) $(ARCHIVED_REPOSITORIES) ##> alias for cloning all archived Project repositories
+
+rm-archives:	##> alias for removing all archived Project repositories
+	rm -rf $(ARCHIVED_REPOSITORIES)
+	rmdir $(ARCHIVE)
+
+$(ARCHIVE)/gm-%:
+	git -C $(ARCHIVE) clone git@github.com:riecenaidoo/gm-$*.git
+
+.PHONY: repos rm-repos archives	rm-archives
+# ========================================
+# Utilities
+# ========================================
+# See [7.2.6 Standard Targets for Users > 'clean'](https://www.gnu.org/prep/standards/html_node/Standard-Targets.html)
+clean: rm-project rm-repos rm-archives	## alias for cleaning up all artifacts produced by this Project
+
+
+help:  ## show a summary of available targets
+	@printf "%s\n" \
+	"------------------" \
+	" General Commands" \
+	"------------------"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
+		| awk 'BEGIN {FS = ":.*?## "}; { \
+			cmd = $$1; desc = $$2; \
+			gsub(/\(([^)]*)\)/, "\033[34m&\033[0m", desc); \
+			printf "  \033[36m%-21s\033[0m %s\n", cmd, desc \
+		}'
+	@printf "%s\n" \
+	"------------------"
+
+help-ext:  ## show all available targets
+	@printf "%s\n" \
+	"------------------" \
+	"Available Commands" \
+	"------------------"
+	@grep -E '^[a-zA-Z0-9_-]+:.*?##>? ' $(MAKEFILE_LIST) \
+		| awk 'BEGIN {FS = ":.*?##>? "}; { \
+			cmd = $$1; desc = $$2; \
+			gsub(/\(([^)]*)\)/, "\033[34m&\033[0m", desc); \
+			printf "  \033[36m%-21s\033[0m %s\n", cmd, desc \
+		}'
+	@printf "%s\n" \
+	"------------------"
+
+.PHONY: clean help help-ext
+# ========================================
+# ANSI Color Escape Codes
+# ========================================
+# YELLOW='\033[0;33m'
+# RED='\033[0;31m'
+# GREEN='\033[0;32m'
+# CYAN='\033[0;36m'
+# BLUE='\033[0;34m'
+# NONE='\033[0m'
+# ========================================
