@@ -52,7 +52,7 @@ rm-project:	##> remove all Project initialisation artifacts
 DIFF_FILES := git diff HEAD --diff-filter=ACM --name-only --relative -z
 UNTRACKED_FILES := git ls-files --others --exclude-standard --full-name -z
 
-git: .git/hooks/pre-commit	##> alias for initialising the local repository; creates Git artifacts
+git: .git/hooks/pre-commit .git/hooks/pre-push	##> alias for initialising the local repository; creates Git artifacts
 
 .git/hooks/pre-commit: ./.scripts/pre-commit.sh	| $(MADE)	## updates the pre-commit hook in the local repository
 	@if [ -f .git/hooks/pre-commit ]; then \
@@ -62,6 +62,16 @@ git: .git/hooks/pre-commit	##> alias for initialising the local repository; crea
 	chmod +x .git/hooks/pre-commit	# Ensure the script is executable.
 	@printf '\n\033[0;33m%s\033[0m\n' "Pre-Commit Hook installed."
 	@printf '\tHint:\t\033[0;36m%s\033[0m\n' "rm .git/hooks/pre-commit"
+	@printf '\tHint:\t\033[0;36m%s\033[0m\n' "make rm-git"
+
+.git/hooks/pre-push: ./.scripts/pre-push.sh	| $(MADE)	## updates the pre-push hook in the local repository
+	@if [ -f .git/hooks/pre-push ]; then \
+		cat .git/hooks/pre-push >> $(MADE)/pre-push; \
+	fi
+	cat .scripts/pre-push.sh > .git/hooks/pre-push
+	chmod +x .git/hooks/pre-push	# Ensure the script is executable.
+	@printf '\n\033[0;33m%s\033[0m\n' "Pre-Push Hook installed."
+	@printf '\tHint:\t\033[0;36m%s\033[0m\n' "rm .git/hooks/pre-push"
 	@printf '\tHint:\t\033[0;36m%s\033[0m\n' "make rm-git"
 
 rm-git:	##> remove all Git artifacts produced by this script
