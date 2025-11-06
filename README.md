@@ -16,4 +16,3 @@ A collection of tools to assist a Gamemaster in:
 - [gm-ui](https://github.com/riecenaidoo/gm-ui): SPA interface
 - [gm-discord](https://github.com/riecenaidoo/gm-discord): Discord integrations
 - [gm-storage](https://github.com/riecenaidoo/gm-storage): Persistent storage
-

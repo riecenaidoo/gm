@@ -16,8 +16,6 @@ start: docker	## start the Project
 stop:	## stop the Project
 	$(COMPOSE) stop
 
-build: docker	## build the Project
-
 log:	## show logs of the Project
 	$(COMPOSE) logs
 
