@@ -102,7 +102,6 @@ archives: $(ARCHIVE) $(ARCHIVED_REPOSITORIES) ##> alias for cloning all archived
 $(ARCHIVE)/gm-%:
 	git -C $(ARCHIVE) clone git@github.com:riecenaidoo/gm-$*.git
 
-
 rm-repos:	##> alias for removing all Project repositories
 	rm -rf $(REPOSITORIES)
 	rm -rf $(ARCHIVE)
@@ -151,7 +150,7 @@ format-all:	##> run formatting on all files
 # Utilities
 # =============================================================================
 # See [7.2.6 Standard Targets for Users > 'clean'](https://www.gnu.org/prep/standards/html_node/Standard-Targets.html)
-clean: rm-project rm-repos rm-docker	## alias for cleaning up all artifacts produced by this Project
+clean: rm-project rm-git rm-repos rm-docker	## alias for cleaning up all artifacts produced by this Project
 
 help:  ## show a summary of available targets
 	@printf "%s\n" \
