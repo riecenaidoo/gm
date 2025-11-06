@@ -75,7 +75,7 @@ rm-git:	##> remove all Git artifacts produced by this script
 # =============================================================================
 REPOSITORIES := gm-ui gm-discord gm-storage
 
-repos: $(REPOSITORIES)	## alias for cloning all Project repositories
+repos: $(REPOSITORIES)	##> alias for cloning all Project repositories
 
 gm-%:
 	git clone git@github.com:riecenaidoo/gm-$*.git
