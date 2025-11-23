@@ -1,6 +1,6 @@
 name: gm
 services:
-  # [gm-ui]
+  # [gm-ui v1.1.0]
   ui:
     container_name: "gm-ui"
     image: gm-ui:latest
@@ -11,7 +11,7 @@ services:
       - "4200:80"
     depends_on:
       - storage
-  # [gm-storage]
+  # [gm-storage v1.1.0]
   storage:
     container_name: "gm-storage"
     image: gm-storage:latest
@@ -40,7 +40,7 @@ services:
       - "./gm-storage/core/src/main/sql/:/docker-entrypoint-initdb.d/"
       # Persist data between sessions.
       - data:/var/lib/postgresql/data
-  # [gm-discord]
+  # [gm-discord v1.1.0]
   discord:
     container_name: "gm-discord"
     image: gm-discord:latest

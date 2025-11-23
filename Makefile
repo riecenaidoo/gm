@@ -1,5 +1,14 @@
 # =============================================================================
-# configs:/makefiles/v1.2.0;/root-repository/v1.1.0
+# configs:/makefiles/v1.3.0;/root-repository/v1.1.0
+# =============================================================================
+# ANSI Color Escape Codes
+# =============================================================================
+YELLOW=\033[0;33m
+RED=\033[0;31m
+GREEN=\033[0;32m
+CYAN=\033[0;36m
+BLUE=\033[0;34m
+NONE=\033[0m
 # =============================================================================
 
 # See [7.2.1 General Conventions for Makefiles](https://www.gnu.org/prep/standards/html_node/Makefile-Basics.html)
@@ -18,6 +27,7 @@ stop:	## stop the Project
 
 log:	## show logs of the Project
 	$(COMPOSE) logs
+	@printf "$(CYAN)\n%s\n$(NONE)" "(Streaming Mode) $(COMPOSE) logs -f"
 
 .PHONY: init all start stop build log
 # =============================================================================
@@ -60,9 +70,8 @@ git: .git/hooks/pre-commit .git/hooks/pre-push	##> alias for initialising the lo
 	fi
 	cat .scripts/pre-commit.sh > .git/hooks/pre-commit
 	chmod +x .git/hooks/pre-commit	# Ensure the script is executable.
-	@printf '\n\033[0;33m%s\033[0m\n' "Pre-Commit Hook installed."
-	@printf '\tHint:\t\033[0;36m%s\033[0m\n' "rm .git/hooks/pre-commit"
-	@printf '\tHint:\t\033[0;36m%s\033[0m\n' "make rm-git"
+	@printf '\n$(YELLOW)%s$(NONE)\n' "Pre-Commit Hook installed."
+	@printf '\tHint:\t$(CYAN)%s$(NONE)\n' "rm .git/hooks/pre-commit" "make rm-git"
 
 .git/hooks/pre-push: ./.scripts/pre-push.sh	| $(MADE)	## updates the pre-push hook in the local repository
 	@if [ -f .git/hooks/pre-push ]; then \
@@ -70,14 +79,13 @@ git: .git/hooks/pre-commit .git/hooks/pre-push	##> alias for initialising the lo
 	fi
 	cat .scripts/pre-push.sh > .git/hooks/pre-push
 	chmod +x .git/hooks/pre-push	# Ensure the script is executable.
-	@printf '\n\033[0;33m%s\033[0m\n' "Pre-Push Hook installed."
-	@printf '\tHint:\t\033[0;36m%s\033[0m\n' "rm .git/hooks/pre-push"
-	@printf '\tHint:\t\033[0;36m%s\033[0m\n' "make rm-git"
+	@printf '\n$(YELLOW)%s$(NONE)\n' "Pre-Push Hook installed."
+	@printf '\tHint:\t$(CYAN)%s$(NONE)\n' "rm .git/hooks/pre-push" "make rm-git"
 
 rm-git:	##> remove all Git artifacts produced by this script
 	rm -f .git/hooks/pre-commit .git/hooks/pre-push
-	@printf '\n\033[0;33m%s\033[0m\n' "Git Hook(s) removed."
-	@printf '\tHint:\t\033[0;36m%s\033[0m contains any overwritten existing Git hooks.\n' "$(MADE)"
+	@printf '\n$(YELLOW)%s$(NONE)\n' "Git Hook(s) removed."
+	@printf '\tHint:\t$(CYAN)%s$(NONE) contains any overwritten existing Git hooks.\n' "$(MADE)"
 
 .PHONY: git rm-git
 # =============================================================================
@@ -123,7 +131,7 @@ docker: $(REPOSITORIES)	##> create all Docker artifacts
 
 rm-docker:	##> remove all Docker artifacts produced by this script
 	$(COMPOSE) down
-	@printf '\nHint:\t\033[0;36m%s\033[0m\t (Prune volume data)\n' "$(COMPOSE) down --volumes"
+	@printf '\nHint:\t$(CYAN)%s$(NONE)\t (Prune volume data)\n' "$(COMPOSE) down --volumes"
 
 .PHONY: docker rm-docker
 # =============================================================================
@@ -141,7 +149,7 @@ format-diff: ##> run formatting on modified (git diff HEAD) files
 format-diff-check: ##> check formatting on modified (git diff HEAD) files
 	@TRAILING_WHITESPACE_FILES=$$($(DIFF_FILES) | $(TRIM_CHECK)); \
 	if [ -n "$$TRAILING_WHITESPACE_FILES" ]; then \
-		  printf '\033[0;31m%s\033[0m' "Trailing Whitespaces!"; \
+		  printf '$(RED)%s$(NONE)' "Trailing Whitespaces!"; \
 		  printf '\t- %s\n' "$$TRAILING_WHITESPACE_FILES"; \
 		exit 1; \
 	fi
@@ -158,7 +166,7 @@ format-all:	##> run formatting on all files
 # Utilities
 # =============================================================================
 # See [7.2.6 Standard Targets for Users > 'clean'](https://www.gnu.org/prep/standards/html_node/Standard-Targets.html)
-clean: rm-project rm-git rm-repos rm-docker	## alias for cleaning up all artifacts produced by this Project
+clean: stop rm-project rm-git rm-repos rm-docker	## alias for cleaning up all artifacts produced by this Project
 
 help:  ## show a summary of available targets
 	@printf "%s\n" \
@@ -168,8 +176,8 @@ help:  ## show a summary of available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?## "}; { \
 			cmd = $$1; desc = $$2; \
-			gsub(/\(([^)]*)\)/, "\033[34m&\033[0m", desc); \
-			printf "  \033[36m%-21s\033[0m %s\n", cmd, desc \
+			gsub(/\(([^)]*)\)/, "$(CYAN)&$(NONE)", desc); \
+			printf "  $(BLUE)%-21s$(NONE) %s\n", cmd, desc \
 		}'
 	@printf "%s\n" \
 	"==============================================================================="
@@ -182,20 +190,11 @@ help-ext:  ## show all available targets
 	@grep -E '^[a-zA-Z0-9_-]+:.*?##>? ' $(MAKEFILE_LIST) \
 		| awk 'BEGIN {FS = ":.*?##>? "}; { \
 			cmd = $$1; desc = $$2; \
-			gsub(/\(([^)]*)\)/, "\033[34m&\033[0m", desc); \
-			printf "  \033[36m%-21s\033[0m %s\n", cmd, desc \
+			gsub(/\(([^)]*)\)/, "$(CYAN)&$(NONE)", desc); \
+			printf "  $(BLUE)%-21s$(NONE) %s\n", cmd, desc \
 		}'
 	@printf "%s\n" \
 	"==============================================================================="
 
 .PHONY: clean help help-ext
-# =============================================================================
-# ANSI Color Escape Codes
-# =============================================================================
-# YELLOW='\033[0;33m'
-# RED='\033[0;31m'
-# GREEN='\033[0;32m'
-# CYAN='\033[0;36m'
-# BLUE='\033[0;34m'
-# NONE='\033[0m'
 # =============================================================================

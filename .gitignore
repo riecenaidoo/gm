@@ -7,3 +7,6 @@
 # Configs
 .idea/
 .obsidian
+
+# Artifacts
+.made/
