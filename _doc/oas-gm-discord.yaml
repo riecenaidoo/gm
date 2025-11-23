@@ -1,0 +1,210 @@
+openapi: 3.0.4
+info:
+  title: GM Discord Service - OpenAPI 3.0
+  description: |-
+    A RESTful API for streaming audio into Discord voice channels.
+
+    See also:
+    - [OAS Docs](https://swagger.io/docs/specification/v3_0/about/)
+    - [Source API](https://github.com/riecenaidoo/gm-discord)
+    - [Example Consumer](https://github.com/riecenaidoo/gm-ui)
+  version: 0.1.0-SNAPSHOT
+tags:
+  - name: Metadata
+    description: "Endpoints that operate on information about the application itself,
+      as opposed to the resources served by the application."
+  - name: Contexts
+    description: "Endpoints that serve resources used to specify operational contexts."
+  - name: Playlist
+    description: "Endpoints that manipulate the state of a Server's Playlist."
+servers:
+  - url: http://localhost:5050
+paths:
+  /:
+    get:
+      tags: [Metadata]
+      summary: Address the Application as a resource.
+      description: Retrieves information about the AudioService application, namely metadata of the underlying Discord bot fulfilling the service.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AudioService'
+  /servers:
+    description: "The Servers the Bot has access to. The operations the Bot supports are always specific to a Server.
+    The expectation is that multiple Users will be using a single Audio Service instance,
+    but operating in different Servers."
+    get:
+      summary: Fetch available Discord servers.
+      tags: [Contexts]
+      description: "Retrieves basic information about the Discord servers this service can manage audio in.
+      The service can operate across multiple Discord servers simultaneously."
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Server'
+  /servers/{id}/voice-channels:
+    description: "The Voice Channels that Bot has access to within a Server."
+    get:
+      summary: Fetch available voice channels.
+      description: "Retrieves basic information about the Discord voice channels this service can use within a Discord server.
+      The service can only operate in a single channel per server."
+      tags: [Contexts]
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: integer
+          required:
+            true
+          description: The `id` of the server whose channels are being queried.
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
+  /servers/{id}/audio:
+    description: "The Audio Player within a Server. If it exists, it is always connected to a Voice Channel.
+    While Discord allows a single Bot can operation over multiple Servers,
+    within a Server a Bot can only connect to a single Voice Channel to serve audio.
+    Multiple instances should be used to overlay audio, or to support multiple Users in a single Server."
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+  /servers/{id}/playlist:
+    description: An ordered collection of Songs.
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+    get:
+      summary: View the Playlist.
+      tags: [Playlist]
+      responses:
+        "200":
+          $ref: "#/components/responses/Playlist"
+    put:
+      summary: Replace the Playlist entirely. Used to Play a new Playlist.
+      tags: [Playlist]
+      responses:
+        "200":
+          $ref: "#/components/responses/Playlist"
+    patch:
+      summary: Update the Playlist. Re-order Songs, enqueue more Songs.
+      tags: [Playlist]
+      responses:
+        "200":
+          $ref: "#/components/responses/Playlist"
+    delete:
+      summary: Clear the entire Playlist.
+      tags: [Playlist]
+      responses:
+        "204":
+          description: OK. No content.
+  /servers/{id}/playlist/current:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+    description: Current is the alias that always points to the Song currently being played, or scheduled to be played.
+    put:
+      summary: Play something immediately.
+      tags: [Playlist]
+      responses:
+        "200":
+          $ref: "#/components/responses/Playlist"
+    delete:
+      summary: Skip the current Song.
+      tags: [Playlist]
+      responses:
+        "204":
+          description: OK. No content.
+  /servers/{id}/playlist/next:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+    put:
+      summary:  Manipulate the Song queue, without effecting what is currently being Played.
+      tags: [Playlist]
+      responses:
+        "200":
+          $ref: "#/components/responses/Playlist"
+    delete:
+      summary: Clear the queue of next Songs.
+      tags: [Playlist]
+      responses:
+        "204":
+          description: OK. No content.
+components:
+  responses:
+      Playlist:
+        description: "A Server's Playlist, which is an ordered collection of Songs. It serves as the queue of Songs for the Server's AudioPlayer.  The first element, if present, is always the currently playing, or scheduled to play, Song."
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/Song"
+  schemas:
+    AudioService:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the Discord bot.
+        icon_url:
+          type: string
+        online:
+          type: boolean
+          description: While the service may be up, the Discord bot may be offline.
+    Server:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "While the server id is numerical,
+          it is sufficiently large enough to cause overflows when parsed in Javascript.
+          For this reason it is returned as a string."
+        name:
+          type: string
+    Channel:
+      type: object
+      description: A channel belongs to a server.
+      properties:
+        id:
+          type: string
+          description: "While the channel id is numerical,
+          it is sufficiently large enough to cause overflows when parsed in Javascript.
+          For this reason it is returned as a string."
+        name:
+          type: string
+    Song:
+      type: object
+      description: More formally, an audio source. More specifically, a reference to a URL on YouTube.
+      properties:
+        id:
+          type: integer
+          description: "Technical identifier of the Song. This identifier is only expected to identify a Song within the context of a Server. Values can be reused over the lifetime of the AudioService, but should be guaranteed to be uniquely identify a Song while it is still a managed resource."
+        url:
+          type: string
+          format: url
