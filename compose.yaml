@@ -1,56 +1,56 @@
-name: gamemaster-soundboard-v2
+name: gm
 services:
-  # [gm-soundboard-ui]    
-  soundboard-ui:
-    container_name: "gm-v2-soundboard-ui"
-    image: gm-v2-soundboard-ui:latest
+  # [gm-ui v1.1.0]
+  ui:
+    container_name: "gm-ui"
+    image: gm-ui:latest
     build:
       context: "./gm-ui"
       dockerfile: "./Dockerfile"
     ports:
       - "4200:80"
     depends_on:
-      - storage-api
-  # [gm-song-storage]   
-  storage-api:
-    container_name: "gm-v2-song-storage-api"
-    image: gm-v2-song-storage-api:latest
+      - storage
+  # [gm-storage v1.1.0]
+  storage:
+    container_name: "gm-storage"
+    image: gm-storage:latest
     build:
-      context: "./gm-song-storage"
+      context: "./gm-storage"
       dockerfile: "./Dockerfile"
     ports:
       - "8080:8080"
     environment:
       # Default User & Password already specified in .properties
       # [How we resolve hostname 'db'](https://docs.docker.com/compose/networking/)
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://storage-db:5432/gm_song_storage
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/gm
       - SPRING.JPA.OPEN-IN-VIEW=false
     depends_on:
-      - storage-db
-  storage-db:
-    container_name: "gm-v2-song-storage-db"
+      - db
+  db:
+    container_name: "gm-db"
     image: postgres:14.12-bullseye
     # [Source](https://www.docker.com/blog/how-to-use-the-postgres-docker-official-image/)
     environment:
       # [Environment Variables for Postgres Img](https://hub.docker.com/_/postgres)
-      - POSTGRES_DB=gm_song_storage
+      - POSTGRES_DB=gm
       - POSTGRES_PASSWORD=admin
     volumes:
       # This is where the DDL would go, for now it just is a placeholder.
-      - "./gm-song-storage/core/src/main/sql/:/docker-entrypoint-initdb.d/"
+      - "./gm-storage/core/src/main/sql/:/docker-entrypoint-initdb.d/"
       # Persist data between sessions.
-      - pgdata:/var/lib/postgresql/data
-  # [gm-audio-service]    
-  audio-api:
-    container_name: "gm-v2-audio-service-api"
-    image: gm-v2-audio-service-api:latest
+      - data:/var/lib/postgresql/data
+  # [gm-discord v1.1.0]
+  discord:
+    container_name: "gm-discord"
+    image: gm-discord:latest
     build:
-      context: "./gm-audio-service"
+      context: "./gm-discord"
       dockerfile: "./Dockerfile"
     ports:
       - "5050:5050"
     tty: true
     env_file:
-      - "./gm-audio-service/.env"
+      - "./gm-discord/.env"
 volumes:
-  pgdata:
+  data:

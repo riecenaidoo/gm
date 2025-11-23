@@ -1,69 +1,200 @@
-.PHONY: launch dev repositories repositories-archive \
-psql	# Aliases
+# =============================================================================
+# configs:/makefiles/v1.3.0;/root-repository/v1.1.0
+# =============================================================================
+# ANSI Color Escape Codes
+# =============================================================================
+YELLOW=\033[0;33m
+RED=\033[0;31m
+GREEN=\033[0;32m
+CYAN=\033[0;36m
+BLUE=\033[0;34m
+NONE=\033[0m
+# =============================================================================
 
-launch: repositories gm-audio-service/.env	## launch the project via Docker. Will clone the required repositories and build the images for the containers.
-	docker compose up -d
+# See [7.2.1 General Conventions for Makefiles](https://www.gnu.org/prep/standards/html_node/Makefile-Basics.html)
+SHELL := /bin/sh
 
-dev: repositories repositories-archive	## clone all repositories associated with the project for use as reference while developing.
+init: project git	## default (no-arg) target to initialise the Project and local repository
 
-gm-audio-service/.env: gm-audio-service
-	@printf "\033[0;36mA template .env file was added to build the Audio Service image. A real token is required to run the Audio Service.\033[0m\n"
-	echo "# Add a Discord Bot token, or create one at https://discord.com/developers/applications" >> "gm-audio-service/.env" ; \
-	echo "DISCORD_BOT_TOKEN=<your_token_here>" >> "gm-audio-service/.env" ; \
+# See [7.2.6 Standard Targets for Users > 'all'](https://www.gnu.org/prep/standards/html_node/Standard-Targets.html)
+all: init repos docker	## primary target for creating all Project artifacts
 
-# ========================================
-# Repositories
-# ========================================
+start: docker	## start the Project
+	$(COMPOSE) start
 
-repositories: \
-gm-audio-service \
-gm-song-storage \
-gm-ui
+stop:	## stop the Project
+	$(COMPOSE) stop
 
-repositories-archive: \
-archive/gm-discord-music-bot \
-archive/gm-discord-npc-chat \
-archive/gm-discord-webhook-dice-roller \
-archive/gm-soundboard-gui \
-archive/gm-youtube-url-validator \
+log:	## show logs of the Project
+	$(COMPOSE) logs
+	@printf "$(CYAN)\n%s\n$(NONE)" "(Streaming Mode) $(COMPOSE) logs -f"
 
-# Git will fail if the folder already exists and is not empty, so only clone if the folder does not exist.
-define git-clone-safe
-	@if [ ! -d "$(1)" ]; then \
-		git clone $(2); \
+.PHONY: init all start stop build log
+# =============================================================================
+# Environment Variables
+# =============================================================================
+# [6.2.4 Conditional Variable Assignment](https://www.gnu.org/software/make/manual/html_node/Conditional-Assignment.html)
+# [6.10 Variables from the Environment](https://www.gnu.org/software/make/manual/html_node/Environment.html)
+COMPOSE ?= docker compose
+# =============================================================================
+# Script Macros
+# =============================================================================
+XARGS := xargs -0 --no-run-if-empty
+PLAINTEXT_FILTER := $(XARGS) file --mime-type | awk -F: '/text\// { printf "%s\0", $$1 }'
+# =============================================================================
+# Project
+# =============================================================================
+MADE := ./.made
+
+project: $(MADE)	##> alias for initialising the Project
+
+$(MADE):
+	mkdir $(MADE)
+
+rm-project:	##> remove all Project initialisation artifacts
+	rm -rf $(MADE)
+
+.PHONY: project rm-project
+# =============================================================================
+# Git
+# - [Git Hooks](https://git-scm.com/book/ms/v2/Customizing-Git-Git-Hooks)
+# =============================================================================
+DIFF_FILES := git diff HEAD --diff-filter=ACM --name-only --relative -z
+UNTRACKED_FILES := git ls-files --others --exclude-standard --full-name -z
+
+git: .git/hooks/pre-commit .git/hooks/pre-push	##> alias for initialising the local repository; creates Git artifacts
+
+.git/hooks/pre-commit: ./.scripts/pre-commit.sh	| $(MADE)	## updates the pre-commit hook in the local repository
+	@if [ -f .git/hooks/pre-commit ]; then \
+		cat .git/hooks/pre-commit >> $(MADE)/pre-commit; \
 	fi
-endef
+	cat .scripts/pre-commit.sh > .git/hooks/pre-commit
+	chmod +x .git/hooks/pre-commit	# Ensure the script is executable.
+	@printf '\n$(YELLOW)%s$(NONE)\n' "Pre-Commit Hook installed."
+	@printf '\tHint:\t$(CYAN)%s$(NONE)\n' "rm .git/hooks/pre-commit" "make rm-git"
 
-gm-audio-service:
-	$(call git-clone-safe, gm-audio-service,git@github.com:riecenaidoo/gm-audio-service.git)
-	@printf "\033[1;33mThe Audio Service requires a Discord Bot token to function. See .env file.\033[0m\n"
-	@printf "\033[1;33mThe GM system can run without the Audio Service, but functionality will be limited.\033[0m\n"
+.git/hooks/pre-push: ./.scripts/pre-push.sh	| $(MADE)	## updates the pre-push hook in the local repository
+	@if [ -f .git/hooks/pre-push ]; then \
+		cat .git/hooks/pre-push >> $(MADE)/pre-push; \
+	fi
+	cat .scripts/pre-push.sh > .git/hooks/pre-push
+	chmod +x .git/hooks/pre-push	# Ensure the script is executable.
+	@printf '\n$(YELLOW)%s$(NONE)\n' "Pre-Push Hook installed."
+	@printf '\tHint:\t$(CYAN)%s$(NONE)\n' "rm .git/hooks/pre-push" "make rm-git"
 
-gm-song-storage:
-	$(call git-clone-safe, gm-song-storage,git@github.com:riecenaidoo/gm-song-storage.git)
+rm-git:	##> remove all Git artifacts produced by this script
+	rm -f .git/hooks/pre-commit .git/hooks/pre-push
+	@printf '\n$(YELLOW)%s$(NONE)\n' "Git Hook(s) removed."
+	@printf '\tHint:\t$(CYAN)%s$(NONE) contains any overwritten existing Git hooks.\n' "$(MADE)"
 
-gm-ui:
-	$(call git-clone-safe, gm-ui,git@github.com:riecenaidoo/gm-ui.git)
+.PHONY: git rm-git
+# =============================================================================
+# Repositories
+# =============================================================================
+REPOSITORIES := gm-ui gm-discord gm-storage
 
-archive/gm-discord-music-bot:
-	$(call git-clone-safe, archive/gm-discord-music-bot,git@github.com:riecenaidoo/gm-discord-music-bot.git)
+repos: $(REPOSITORIES)	##> alias for cloning all Project repositories
 
-archive/gm-discord-npc-chat:
-	$(call git-clone-safe, archive/gm-discord-npc-chat,git@github.com:riecenaidoo/gm-discord-npc-chat.git)
+gm-%:
+	git clone git@github.com:riecenaidoo/gm-$*.git
+	@if $(MAKE) -C ./gm-$* init -n 2>/dev/null; then \
+		$(MAKE) -C ./gm-$* init; \
+	fi
 
-archive/gm-discord-webhook-dice-roller:
-	$(call git-clone-safe, archive/gm-discord-webhook-dice-roller,git@github.com:riecenaidoo/gm-discord-webhook-dice-roller.git)
+ARCHIVE := ./archive
 
-archive/gm-soundboard-gui:
-	$(call git-clone-safe, archive/gm-soundboard-gui,git@github.com:riecenaidoo/gm-soundboard-gui.git)
+$(ARCHIVE):
+	mkdir $(ARCHIVE)
 
-archive/gm-youtube-url-validator:
-	$(call git-clone-safe, archive/gm-youtube-url-validator,git@github.com:riecenaidoo/gm-youtube-url-validator.git)
+ARCHIVED_REPOSITORIES := \
+	$(ARCHIVE)/gm-discord-music-bot  \
+	$(ARCHIVE)/gm-discord-npc-chat \
+	$(ARCHIVE)/gm-discord-webhook-dice-roller \
+	$(ARCHIVE)/gm-soundboard-gui \
+	$(ARCHIVE)/gm-youtube-url-validator
 
-# ========================================
-# Aliases
-# ========================================
+archives: $(ARCHIVE) $(ARCHIVED_REPOSITORIES) ##> alias for cloning all archived Project repositories
 
-# Sync with the configuration in the `compose.yaml`
-psql:	## connect to the DB container
-	docker compose exec storage-db psql -h localhost -p 5432 -U postgres -d gm_song_storage
+$(ARCHIVE)/gm-%:
+	git -C $(ARCHIVE) clone git@github.com:riecenaidoo/gm-$*.git
+
+rm-repos:	##> alias for removing all Project repositories
+	rm -rf $(REPOSITORIES)
+	rm -rf $(ARCHIVE)
+
+.PHONY: repos archives rm-repos
+# =============================================================================
+# Docker
+# =============================================================================
+docker: $(REPOSITORIES)	##> create all Docker artifacts
+	$(COMPOSE) create
+
+rm-docker:	##> remove all Docker artifacts produced by this script
+	$(COMPOSE) down
+	@printf '\nHint:\t$(CYAN)%s$(NONE)\t (Prune volume data)\n' "$(COMPOSE) down --volumes"
+
+.PHONY: docker rm-docker
+# =============================================================================
+# Formatting
+# =============================================================================
+TRIM_CHECK := $(PLAINTEXT_FILTER) | $(XARGS) grep -lZ '[[:blank:]]$$'
+TRIM := $(TRIM_CHECK) | $(XARGS) sed -i 's/[ \t]*$$//'
+
+format: format-diff format-untracked	## alias to run formatting (format-diff) (format-untracked) rules
+	git status -s
+
+format-diff: ##> run formatting on modified (git diff HEAD) files
+	$(DIFF_FILES) | $(TRIM)
+
+format-diff-check: ##> check formatting on modified (git diff HEAD) files
+	@TRAILING_WHITESPACE_FILES=$$($(DIFF_FILES) | $(TRIM_CHECK)); \
+	if [ -n "$$TRAILING_WHITESPACE_FILES" ]; then \
+		  printf '$(RED)%s$(NONE)' "Trailing Whitespaces!"; \
+		  printf '\t- %s\n' "$$TRAILING_WHITESPACE_FILES"; \
+		exit 1; \
+	fi
+
+format-untracked:	##> run formatting on untracked files
+	$(UNTRACKED_FILES) | $(TRIM)
+
+format-all:	##> run formatting on all files
+	find . -maxdepth 1 -type f -print0 | $(TRIM)
+	find .scripts/ -type f -print0 | $(TRIM)
+
+.PHONY: format format-diff format-untracked format-all
+# =============================================================================
+# Utilities
+# =============================================================================
+# See [7.2.6 Standard Targets for Users > 'clean'](https://www.gnu.org/prep/standards/html_node/Standard-Targets.html)
+clean: stop rm-project rm-git rm-repos rm-docker	## alias for cleaning up all artifacts produced by this Project
+
+help:  ## show a summary of available targets
+	@printf "%s\n" \
+	"===============================================================================" \
+	" General Commands" \
+	"==============================================================================="
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
+		| awk 'BEGIN {FS = ":.*?## "}; { \
+			cmd = $$1; desc = $$2; \
+			gsub(/\(([^)]*)\)/, "$(CYAN)&$(NONE)", desc); \
+			printf "  $(BLUE)%-21s$(NONE) %s\n", cmd, desc \
+		}'
+	@printf "%s\n" \
+	"==============================================================================="
+
+help-ext:  ## show all available targets
+	@printf "%s\n" \
+	"===============================================================================" \
+	"Available Commands" \
+	"==============================================================================="
+	@grep -E '^[a-zA-Z0-9_-]+:.*?##>? ' $(MAKEFILE_LIST) \
+		| awk 'BEGIN {FS = ":.*?##>? "}; { \
+			cmd = $$1; desc = $$2; \
+			gsub(/\(([^)]*)\)/, "$(CYAN)&$(NONE)", desc); \
+			printf "  $(BLUE)%-21s$(NONE) %s\n", cmd, desc \
+		}'
+	@printf "%s\n" \
+	"==============================================================================="
+
+.PHONY: clean help help-ext
+# =============================================================================
