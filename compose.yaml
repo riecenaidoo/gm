@@ -18,13 +18,15 @@ services:
     build:
       context: "./gm-storage"
       dockerfile: "./Dockerfile"
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       # Default User & Password already specified in .properties
       # [How we resolve hostname 'db'](https://docs.docker.com/compose/networking/)
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/gm
-      - SPRING.JPA.OPEN-IN-VIEW=false
+    env_file:
+      # Use APP_CLIENT_URL configs
+      - "./gm-ui/.env"
     depends_on:
       - db
   db:
@@ -47,9 +49,8 @@ services:
     build:
       context: "./gm-discord"
       dockerfile: "./Dockerfile"
-    ports:
-      - "5050:5050"
-    tty: true
+    expose:
+      - "5050"
     env_file:
       - "./gm-discord/.env"
 volumes:
