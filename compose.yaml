@@ -21,9 +21,10 @@ services:
     expose:
       - "8080"
     environment:
-      # Default User & Password already specified in .properties
       # [How we resolve hostname 'db'](https://docs.docker.com/compose/networking/)
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/gm
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=admin
     env_file:
       # Use APP_CLIENT_URL configs
       - "./gm-ui/.env"
@@ -39,7 +40,7 @@ services:
       - POSTGRES_PASSWORD=admin
     volumes:
       # This is where the DDL would go, for now it just is a placeholder.
-      - "./gm-storage/core/src/main/sql/:/docker-entrypoint-initdb.d/"
+      - "./gm-storage/core/src/main/resources/:/docker-entrypoint-initdb.d/"
       # Persist data between sessions.
       - data:/var/lib/postgresql/data
   # [gm-discord v1.1.0]
